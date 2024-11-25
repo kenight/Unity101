@@ -9,7 +9,7 @@ public class SnapTool : EditorWindow
     SerializedObject _serializedObject;
     SerializedProperty _perGridSizeProp;
 
-    [MenuItem("Example/Snap Tool")]
+    [MenuItem("Window/EditorScript/IMGUI/Snap Tool")]
     public static void OpenWindow() => GetWindow<SnapTool>("Snap Tool");
 
     void OnEnable()

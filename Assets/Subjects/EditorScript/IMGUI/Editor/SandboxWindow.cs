@@ -1,7 +1,5 @@
-using System;
 using UnityEditor;
 using UnityEngine;
-using UnityEngine.UIElements;
 
 public class SandboxWindow : EditorWindow
 {
@@ -14,7 +12,7 @@ public class SandboxWindow : EditorWindow
     // 在 Inspector 改变属性值并不会立即应用到 SerializedObject, 更新需要调用 SerializedObject.Update
     SerializedObject _targetWeaponSo;
 
-    [MenuItem("Example/Sandbox")]
+    [MenuItem("Window/EditorScript/IMGUI/Sand box")]
     static void OpenWindow()
     {
         SandboxWindow sandboxWindow = GetWindow<SandboxWindow>();

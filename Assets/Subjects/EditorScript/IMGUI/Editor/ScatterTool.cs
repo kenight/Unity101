@@ -21,7 +21,7 @@ public class ScatterTool : EditorWindow
     bool[] _selectedPrefabs;
 
 
-    [MenuItem("Example/Scatter Tool")]
+    [MenuItem("Window/EditorScript/IMGUI/Scatter Tool")]
     public static void OpenWindow()
     {
         GetWindow<ScatterTool>("Scatter Tool");
