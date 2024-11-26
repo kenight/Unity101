@@ -1,10 +1,10 @@
 <engine:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:engine="UnityEngine.UIElements" xmlns:editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="True">
-    <Style src="project://database/Assets/Subjects/EditorScript/UITookit/QuickBookmark/Editor/QuickBookmark.uss?fileID=7433441132597879392&amp;guid=5fc04e91f8f3dbc4ba7b38abf969bea6&amp;type=3#QuickBookmark" />
+    <Style src="project://database/Assets/Subjects/EditorScript/UITookit/Favorites/Editor/Favorites.uss?fileID=7433441132597879392&amp;guid=5fc04e91f8f3dbc4ba7b38abf969bea6&amp;type=3#Favorites" />
     <engine:VisualElement name="VisualElement" style="flex-grow: 1; margin-top: 6px; margin-right: 6px; margin-bottom: 6px; margin-left: 6px;">
         <engine:ListView name="ListView" style="flex-grow: 1;" />
         <engine:VisualElement style="flex-direction: row; flex-shrink: 0;">
-            <engine:Button text="Add" name="Add" class="btn-add" style="width: auto;" />
-            <engine:Button text="Remove" name="Remove" class="btn-remove" style="width: auto;" />
+            <engine:Button text="+" name="Add" class="btn-add" style="width: auto;" />
+            <engine:Button text="-" name="Remove" class="btn-remove" style="width: auto;" />
         </engine:VisualElement>
     </engine:VisualElement>
 </engine:UXML>

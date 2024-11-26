@@ -3,7 +3,6 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
 using System.IO;
-using Object = UnityEngine.Object;
 
 namespace MyTools
 {
@@ -12,8 +11,14 @@ namespace MyTools
         [SerializeField] VisualTreeAsset uxmlAsset;
         [SerializeField] VisualTreeAsset itemUxmlAsset;
 
+        // 记录文件名
+        const string SaveFileName = "favorites.json";
+
         List<Object> _favoriteObjects;
         List<string> _savedFavorites;
+        VisualElement _listViewContainer;
+        Button _addFavoriteButton;
+        Button _removeFavoriteButton;
         ListView _listView;
         bool _newAssetDragged;
 
@@ -23,6 +28,9 @@ namespace MyTools
             var win = GetWindow<Favorites>();
             // 初始窗口大小
             win.minSize = new Vector2(200, 180);
+            var tIconContent = EditorGUIUtility.IconContent("Favorite");
+            tIconContent.text = "Favorites";
+            win.titleContent = tIconContent;
         }
 
         void OnEnable()
@@ -35,34 +43,53 @@ namespace MyTools
         {
             var root = rootVisualElement;
 
-            var uxml = uxmlAsset.Instantiate();
+            _listViewContainer = uxmlAsset.Instantiate();
             // 发现必须在代码中设置才能撑满窗口
-            uxml.style.flexGrow = 1;
+            _listViewContainer.style.flexGrow = 1;
 
-            // 注册 uxml 的拖拽事件
-            // 发现注册 _listView 的拖拽事件响应资源拖入会有 BUG (窗口 Tab 栏拖动后会禁止资源的拖入)
-            uxml.RegisterCallback<DragEnterEvent>(OnDragEnter);
-            uxml.RegisterCallback<DragUpdatedEvent>(OnDragUpdated);
-            uxml.RegisterCallback<DragLeaveEvent>(OnDragLeave);
-            uxml.RegisterCallback<DragPerformEvent>(OnDragPerform);
+            // 为什么这里使用 ListView 父级 uxml 注册拖拽事件
+            // 原因：ListView Tab 拖动后不能接受拖拽输入,bug?
+            // 使用 uxml 响应拖拽又会被 ListView 阻挡,所以需要临时禁用 ListView
+            _listViewContainer.RegisterCallback<DragEnterEvent>(OnDragEnter);
+            _listViewContainer.RegisterCallback<DragUpdatedEvent>(OnDragUpdated);
+            _listViewContainer.RegisterCallback<DragLeaveEvent>(OnDragLeave);
+            _listViewContainer.RegisterCallback<DragPerformEvent>(OnDragPerform);
 
-            _listView = uxml.Q<ListView>();
+            _listView = _listViewContainer.Q<ListView>();
             _listView.fixedItemHeight = 20;
             _listView.itemsSource = _favoriteObjects;
             _listView.makeItem = MakeItem;
             _listView.bindItem = BindItem;
             _listView.selectedIndicesChanged += OnSelectedIndicesChanged;
 
-            var addButton = uxml.Q<Button>("Add");
-            var removeButton = uxml.Q<Button>("Remove");
+            _addFavoriteButton = _listViewContainer.Q<Button>("Add");
+            _removeFavoriteButton = _listViewContainer.Q<Button>("Remove");
 
-            addButton.RegisterCallback<ClickEvent>(OnAddClicked);
-            removeButton.RegisterCallback<ClickEvent>(OnRemoveClicked);
+            _addFavoriteButton.RegisterCallback<ClickEvent>(OnAddClicked);
+            _removeFavoriteButton.RegisterCallback<ClickEvent>(OnRemoveClicked);
 
-            root.Add(uxml);
+            root.Add(_listViewContainer);
 
-            // 加载存储文件
+            // 加载记录文件
             LoadFavorites();
+        }
+
+        // 当窗口失去焦点时触发
+        void OnLostFocus()
+        {
+            // 失去聚焦时重置 selectedIndex, 再次点击同一个 item 时使其触发 selectedIndicesChanged (否则不会触发因为没有改变发生)
+            _listView.selectedIndex = -1;
+        }
+
+        void OnDisable()
+        {
+            _listViewContainer.UnregisterCallback<DragEnterEvent>(OnDragEnter);
+            _listViewContainer.UnregisterCallback<DragUpdatedEvent>(OnDragUpdated);
+            _listViewContainer.UnregisterCallback<DragLeaveEvent>(OnDragLeave);
+            _listViewContainer.UnregisterCallback<DragPerformEvent>(OnDragPerform);
+            _listView.selectedIndicesChanged -= OnSelectedIndicesChanged;
+            _addFavoriteButton.UnregisterCallback<ClickEvent>(OnAddClicked);
+            _removeFavoriteButton.UnregisterCallback<ClickEvent>(OnRemoveClicked);
         }
 
         void OnDragEnter(DragEnterEvent evt)
@@ -106,14 +133,37 @@ namespace MyTools
         }
 
         // 点击列表项时设置对象为激活对象
-        void OnSelectedIndicesChanged(IEnumerable<int> indices)
+        async void OnSelectedIndicesChanged(IEnumerable<int> indices)
         {
-            foreach (var index in indices)
+            var selectedIndex = _listView.selectedIndex;
+            if (selectedIndex < 0 || selectedIndex > _favoriteObjects.Count - 1)
             {
-                // 设置这个属性 Unity 会显示对象到 Inspector 中
-                Selection.activeObject = _favoriteObjects[index];
-                break;
+                return;
             }
+
+            var selectedObject = _favoriteObjects[selectedIndex];
+            var assetPath = AssetDatabase.GetAssetPath(selectedObject);
+
+            // 是文件夹
+            if (Directory.Exists(assetPath))
+            {
+                Selection.activeObject = selectedObject;
+                await OpenFolder();
+            }
+            else
+            {
+                Selection.activeObject = selectedObject;
+                // PingObject 在 Project windows 中有一个选中的动画 (但不会转到对应的 Inspector)
+                EditorGUIUtility.PingObject(selectedObject);
+            }
+        }
+
+        // 没有找到更合适的方法进入文件夹,使用菜单命令模拟这个过程
+        // 且发现不延迟执行这个命名无效
+        async Awaitable OpenFolder()
+        {
+            await Awaitable.NextFrameAsync();
+            EditorApplication.ExecuteMenuItem("Assets/Open");
         }
 
         // Add 按钮添加收藏
@@ -165,10 +215,10 @@ namespace MyTools
             return itemUxmlAsset.Instantiate();
         }
 
-        // 获取文件路径
+        // 获取记录文件路径
         string GetSavePath()
         {
-            return Application.persistentDataPath + "/favorites.json";
+            return Application.persistentDataPath + "/" + SaveFileName;
         }
 
         // 保存收藏
@@ -194,7 +244,7 @@ namespace MyTools
                 return;
             }
 
-            // 解析存储的 json 文件到类型
+            // 解析记录文件
             try
             {
                 var saveData = JsonUtility.FromJson<FavoritesSaveData>(File.ReadAllText(savePath));
@@ -209,7 +259,7 @@ namespace MyTools
             }
             catch
             {
-                Debug.LogWarning("Favorites 存储文件解析错误");
+                Debug.LogWarning("Favorites 记录文件解析错误");
             }
         }
 
@@ -217,11 +267,11 @@ namespace MyTools
         [System.Serializable]
         public struct FavoritesSaveData
         {
-            public string[] assetPath;
+            public List<string> assetPath;
 
             public FavoritesSaveData(List<string> path)
             {
-                assetPath = path.ToArray();
+                assetPath = path;
             }
         }
     }

@@ -1,5 +1,5 @@
 Button {
-    min-width: 80px;
+    min-width: 40px;
     flex-grow: 1;
     margin-top: 0;
     margin-right: 0;
