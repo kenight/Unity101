@@ -12,6 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bd630da455e648545899100000f5a2f3, type: 3}
   m_Name: ColorHierarchy
   m_EditorClassIdentifier: 
-  settings:
+  fontSize: 12
+  keyConfigs:
   - key: '#'
-    backgroundColor: {r: 0.59120995, g: 0.1172618, b: 0.7610062, a: 1}
+    textColor: {r: 1, g: 1, b: 1, a: 1}
+    backgroundColor: {r: 0, g: 0, b: 0, a: 1}

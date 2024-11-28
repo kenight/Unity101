@@ -65,7 +65,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b107e4449d2cd4d48a334ed54b49b9b9, type: 3}
   m_Name: CustomFullScreenFeature
   m_EditorClassIdentifier: 
-  m_Active: 1
+  m_Active: 0
   passMaterial: {fileID: 2100000, guid: 186ba4880e6488344ac76de92a2707cc, type: 2}
 --- !u!114 &7833122117494664109
 MonoBehaviour:
