@@ -1,3 +1,4 @@
+using UnityEditor;
 using UnityEngine;
 
 // 使用屏幕分辨率作为图片的大小
@@ -44,6 +45,8 @@ public class CapturePNG : MonoBehaviour
         byte[] bytes = texture.EncodeToPNG();
         var path = Application.dataPath + "/Capture.png";
         System.IO.File.WriteAllBytes(path, bytes);
+        // 立即刷新资源 (否则不会立即出现)
+        AssetDatabase.Refresh();
         Debug.Log("Save PNG to " + path);
 
         // 重置激活的 RT

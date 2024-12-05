@@ -133,7 +133,7 @@ namespace MyTools
         }
 
         // 点击列表项时设置对象为激活对象
-        async void OnSelectedIndicesChanged(IEnumerable<int> indices)
+        void OnSelectedIndicesChanged(IEnumerable<int> indices)
         {
             var selectedIndex = _listView.selectedIndex;
             if (selectedIndex < 0 || selectedIndex > _favoriteObjects.Count - 1)
@@ -148,7 +148,14 @@ namespace MyTools
             if (Directory.Exists(assetPath))
             {
                 Selection.activeObject = selectedObject;
-                await OpenFolder();
+                // await OpenFolder();
+
+                EditorApplication.delayCall += () =>
+                {
+                    // 没有找到更合适的方法进入文件夹,使用菜单命令模拟这个过程
+                    // 且发现不延迟执行这个命名无效
+                    EditorApplication.ExecuteMenuItem("Assets/Open");
+                };
             }
             else
             {
@@ -156,14 +163,6 @@ namespace MyTools
                 // PingObject 在 Project windows 中有一个选中的动画 (但不会转到对应的 Inspector)
                 EditorGUIUtility.PingObject(selectedObject);
             }
-        }
-
-        // 没有找到更合适的方法进入文件夹,使用菜单命令模拟这个过程
-        // 且发现不延迟执行这个命名无效
-        async Awaitable OpenFolder()
-        {
-            await Awaitable.NextFrameAsync();
-            EditorApplication.ExecuteMenuItem("Assets/Open");
         }
 
         // Add 按钮添加收藏
@@ -252,14 +251,22 @@ namespace MyTools
                 foreach (var path in saveData.assetPath)
                 {
                     var obj = AssetDatabase.LoadAssetAtPath<Object>(path);
-                    _favoriteObjects.Add(obj);
+                    // 资源路径是否有效 (资源可能被移动导致加载失败)
+                    if (obj != null)
+                    {
+                        _favoriteObjects.Add(obj);
+                    }
+                    else
+                    {
+                        Debug.LogWarning($"Favorites:资源 {path} 不存在");
+                    }
                 }
 
                 _listView.RefreshItems();
             }
             catch
             {
-                Debug.LogWarning("Favorites 记录文件解析错误");
+                Debug.LogWarning("Favorites:记录文件解析错误");
             }
         }
 

@@ -47,7 +47,7 @@ public class ScatterTool : EditorWindow
     void GetPrefabAsset()
     {
         _prefabAsset = new List<GameObject>();
-        string[] prefabGuid = AssetDatabase.FindAssets("t:Prefab", new[] { "Assets/Prefabs" });
+        string[] prefabGuid = AssetDatabase.FindAssets("t:Prefab", new[] { "Assets/General/Prefabs" });
         foreach (var guid in prefabGuid)
         {
             _prefabAsset.Add(AssetDatabase.LoadAssetAtPath<GameObject>(AssetDatabase.GUIDToAssetPath(guid)));
@@ -210,10 +210,14 @@ public class ScatterTool : EditorWindow
             GameObject randPrefab = _spawnPrefabs[Random.Range(0, _spawnPrefabs.Count)];
             // 使用 InstantiatePrefab 才能在编辑器中正确生成 prefab
             GameObject newPrefab = PrefabUtility.InstantiatePrefab(randPrefab) as GameObject;
-            // 创建对象专属的 Undo 方法
-            Undo.RegisterCreatedObjectUndo(newPrefab, "Spawn Object");
-            newPrefab.transform.position = pose.position;
-            newPrefab.transform.rotation = pose.rotation;
+            if (newPrefab != null)
+            {
+                // 创建对象专属的 Undo 方法
+                Undo.RegisterCreatedObjectUndo(newPrefab, "Spawn Object");
+
+                newPrefab.transform.position = pose.position;
+                newPrefab.transform.rotation = pose.rotation;
+            }
         }
 
         GenerateRandomPoint();
